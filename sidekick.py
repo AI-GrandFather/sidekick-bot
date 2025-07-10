@@ -6,11 +6,10 @@ from dotenv import load_dotenv
 from langgraph.prebuilt import ToolNode
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.sqlite import SqliteSaver
-from langgraph.checkpoint.memory import MemorySaver
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from typing import List, Any, Optional, Dict
 from pydantic import BaseModel, Field
-from sidekick_tools import playwright_tools, other_tools
+from sidekick_tools import other_tools
 import uuid
 import asyncio
 from datetime import datetime
@@ -38,12 +37,10 @@ class Sidekick:
         self.graph = None
         self.sidekick_id = str(uuid.uuid4())
         self.memory = SqliteSaver("sidekick_memory.db")
-        self.browser = None
-        self.playwright = None
+        
 
     async def setup(self):
-        self.tools, self.browser, self.playwright = await playwright_tools()
-        self.tools += await other_tools()
+        self.tools = await other_tools()
         worker_llm = ChatOpenAI(model="gpt-4o-mini")
         self.worker_llm_with_tools = worker_llm.bind_tools(self.tools)
         evaluator_llm = ChatOpenAI(model="gpt-4o-mini")
@@ -53,7 +50,7 @@ class Sidekick:
     def worker(self, state: State) -> Dict[str, Any]:
         system_message = f"""You are a helpful assistant that can use tools to complete tasks.
     You keep working on a task until either you have a question or clarification for the user, or the success criteria is met.
-    You have many tools to help you, including tools to browse the internet, navigating and retrieving web pages.
+    You have many tools to help you, including tools to search the internet, navigating and retrieving web pages.
     You have a tool to run python code, but note that you would need to include a print() statement if you wanted to receive output.
     The current date and time is {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
 
@@ -175,14 +172,4 @@ class Sidekick:
         feedback = {"role": "assistant", "content": result["messages"][-1].content}
         return history + [user, reply, feedback]
 
-    def cleanup(self):
-        if self.browser:
-            try:
-                loop = asyncio.get_running_loop()
-                loop.create_task(self.browser.close())
-                if self.playwright:
-                    loop.create_task(self.playwright.stop())
-            except RuntimeError:
-                asyncio.run(self.browser.close())
-                if self.playwright:
-                    asyncio.run(self.playwright.stop())
+   
