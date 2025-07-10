@@ -40,7 +40,7 @@ class Sidekick:
         
 
     async def setup(self):
-        self.tools = await other_tools()
+        self.tools = other_tools()
         worker_llm = ChatOpenAI(model="gpt-4o-mini")
         self.worker_llm_with_tools = worker_llm.bind_tools(self.tools)
         evaluator_llm = ChatOpenAI(model="gpt-4o-mini")
