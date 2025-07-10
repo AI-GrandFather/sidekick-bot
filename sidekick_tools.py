@@ -19,7 +19,11 @@ serper = GoogleSerperAPIWrapper()
 
 async def playwright_tools():
     playwright = await async_playwright().start()
-    browser = await playwright.chromium.launch(headless=False)
+    browser = await playwright.chromium.launch(
+        headless=True,                # headless instead of headful
+        args=["--no-sandbox"]         # sandbox won’t work in a container
+    )
+    await browser.close()
     toolkit = PlayWrightBrowserToolkit.from_browser(async_browser=browser)
     return toolkit.get_tools(), browser, playwright
 
