@@ -1,17 +1,18 @@
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from sidekick import Sidekick
+from langchain_core.messages import HumanMessage
 import asyncio
 import os
+import traceback
 
 app = Flask(__name__)
 sidekick = Sidekick()
 
-# Track setup completion
-setup_complete = False
+setup_complete = False  # track if setup is done
 
 @app.before_request
 def run_setup_once():
-    """Ensure async sidekick.setup() only runs for the very first request."""
+    """Ensure async sidekick.setup() only runs once."""
     global setup_complete
     if not setup_complete:
         asyncio.run(sidekick.setup())
@@ -19,7 +20,7 @@ def run_setup_once():
 
 @app.after_request
 def allow_iframe(response):
-    """Allow embedding in Shopify store."""
+    """Allow embedding inside Shopify iframe."""
     response.headers["X-Frame-Options"] = "ALLOW-FROM https://ecomm-zilla.com"
     response.headers["Content-Security-Policy"] = "frame-ancestors https://ecomm-zilla.com"
     return response
@@ -30,11 +31,11 @@ def index():
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    """Handle chat messages (and optional image upload)."""
     try:
-        message = request.form.get("message", "")
+        # Extract inputs
+        user_input = request.form.get("message", "")
         criteria = request.form.get("criteria", "")
-        history = []  # Extend if needed
+        history = []  # For now; can be extended to support session memory
 
         # Handle optional image upload
         if "image" in request.files:
@@ -44,13 +45,16 @@ def chat():
                 os.makedirs(upload_dir, exist_ok=True)
                 filepath = os.path.join(upload_dir, image_file.filename)
                 image_file.save(filepath)
-                # Use `filepath` with sidekick if needed
+                # You can pass filepath to Sidekick later if needed
 
-        # Run the chat step
-        result = asyncio.run(sidekick.run_superstep(message, criteria, history))
+        # Wrap message in expected format
+        user_message = HumanMessage(content=user_input)
+        result = asyncio.run(sidekick.run_superstep([user_message], criteria, history))
+
         return jsonify({"messages": result})
-
+    
     except Exception as e:
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 @app.route("/health")
@@ -61,3 +65,6 @@ def health():
 def uploads(filename):
     upload_dir = os.path.join(app.root_path, "uploads")
     return send_from_directory(upload_dir, filename)
+
+if __name__ == "__main__":
+    app.run(debug=True, host="0.0.0.0", port=5050)
