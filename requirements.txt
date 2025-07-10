@@ -13,3 +13,4 @@ langchain-openai
 requests
 gunicorn
 langgraph-checkpoint-sqlite
+wikipedia
