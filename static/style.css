@@ -1,0 +1,81 @@
+/* style.css */
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+#chatToggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 14px;
+    font-size: 20px;
+    border: none;
+    background-color: #059669;
+    color: white;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 1000;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+#chatbox {
+    display: none;
+    flex-direction: column;
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    width: 350px;
+    height: 500px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    z-index: 1001;
+}
+
+#chatbox-header {
+    background-color: #059669;
+    color: white;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#history {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+    background: #f9f9f9;
+}
+
+#history div {
+    margin-bottom: 8px;
+}
+
+textarea,
+input[type="text"] {
+    width: calc(100% - 20px);
+    margin: 5px 10px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    resize: none;
+}
+
+input[type="file"] {
+    margin: 5px 10px;
+}
+
+.send-btn {
+    margin: 10px;
+    padding: 10px;
+    background-color: #059669;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}

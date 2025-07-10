@@ -1,0 +1,12 @@
+flask
+python-dotenv
+langchain
+langgraph
+openai
+nest_asyncio
+playwright
+langchain-community
+langchain-experimental
+langchain-core
+langgraph-checkpoint
+requests
