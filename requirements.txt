@@ -9,5 +9,6 @@ langchain-community
 langchain-experimental
 langchain-core
 langgraph-checkpoint
+langchain-openai
 requests
 gunicorn
