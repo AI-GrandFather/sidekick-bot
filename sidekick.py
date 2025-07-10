@@ -5,7 +5,7 @@ from langgraph.graph.message import add_messages
 from dotenv import load_dotenv
 from langgraph.prebuilt import ToolNode
 from langchain_openai import ChatOpenAI
-from langgraph.checkpoint.sqlite import SqliteSaver
+from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from typing import List, Any, Optional, Dict
 from pydantic import BaseModel, Field
@@ -13,6 +13,8 @@ from sidekick_tools import other_tools
 import uuid
 import asyncio
 from datetime import datetime
+import aiosqlite 
+from flask import session
 
 load_dotenv(override=True)
 
@@ -36,10 +38,14 @@ class Sidekick:
         self.llm_with_tools = None
         self.graph = None
         self.sidekick_id = str(uuid.uuid4())
-        self.memory = SqliteSaver("sidekick_memory.db")
+        self.memory = None  # ← Delay initializatio
         
 
     async def setup(self):
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop) 
+        conn = await aiosqlite.connect("sidekick_memory.db")
+        self.memory = AsyncSqliteSaver(conn)
         self.tools = other_tools()
         worker_llm = ChatOpenAI(model="gpt-4o-mini")
         self.worker_llm_with_tools = worker_llm.bind_tools(self.tools)
@@ -169,7 +175,7 @@ class Sidekick:
         result = await self.graph.ainvoke(state, config=config)
         user = {"role": "user", "content": message}
         reply = {"role": "assistant", "content": result["messages"][-2].content}
-        feedback = {"role": "assistant", "content": result["messages"][-1].content}
-        return history + [user, reply, feedback]
+        #feedback = {"role": "assistant", "content": result["messages"][-1].content}
+        return history + [user, reply]
 
    

@@ -16,9 +16,17 @@ closeBtn.addEventListener("click", () => {
     chatbox.style.display = "none";
 });
 
+messageInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+});
+
 function appendMessage(role, content) {
     const div = document.createElement("div");
-    div.innerHTML = `<strong>${role}:</strong> ${content}`;
+    div.className = `chat ${role}`;
+    div.textContent = content;
     history.appendChild(div);
     history.scrollTop = history.scrollHeight;
 }
@@ -30,10 +38,17 @@ async function sendMessage() {
 
     if (!message && !file) return;
 
-    appendMessage("You", message);
+    appendMessage("user", message);
     messageInput.value = "";
     criteriaInput.value = "";
     imageInput.value = "";
+
+    // Show typing indicator
+    const typingDiv = document.createElement("div");
+    typingDiv.className = "chat assistant typing";
+    typingDiv.textContent = "Customer Support is typing...";
+    history.appendChild(typingDiv);
+    history.scrollTop = history.scrollHeight;
 
     const formData = new FormData();
     formData.append("message", message);
@@ -46,8 +61,20 @@ async function sendMessage() {
             body: formData,
         });
         const data = await res.json();
-        data.messages.forEach((m) => appendMessage(m.role, m.content));
+
+        history.removeChild(typingDiv);
+
+        data.messages.forEach((m) => {
+            if (
+                typeof m.content === "string" &&
+                !m.content.startsWith("Evaluator Feedback") &&
+                (m.role === "assistant" || m.role === "user")
+            ) {
+                appendMessage(m.role, m.content);
+            }
+        });
     } catch (err) {
-        appendMessage("Assistant", "Something went wrong. Please try again.");
+        history.removeChild(typingDiv);
+        appendMessage("assistant", "Something went wrong. Please try again.");
     }
 }
