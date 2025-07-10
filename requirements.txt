@@ -12,3 +12,4 @@ langgraph-checkpoint
 langchain-openai
 requests
 gunicorn
+langgraph-checkpoint-sqlite
